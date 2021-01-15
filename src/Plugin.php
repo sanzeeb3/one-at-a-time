@@ -42,7 +42,8 @@ final class Plugin {
 		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( $this, 'update_last_login' ) );
 		add_action( 'init', array( $this, 'update_online_users_status' ) );
-		add_filter( 'wp_authenticate_user', array( $this, 'check_status' ) );
+		add_action( 'init', array( $this, 'logout' ) );
+		add_filter( 'wp_authenticate_user', array( $this, 'check_availability' ) );
 	}
 
 	/**
@@ -65,8 +66,10 @@ final class Plugin {
 	 * Checks if any administator is online or not.
 	 *
 	 * @param  int $user_id    User ID.
+	 *
+	 * @since  1.0.0
 	 * 
-	 * @return boolean|int
+	 * @return boolean|int false or User ID.
 	 */
 	public function is_any_administrator_online() {
 	
@@ -84,7 +87,7 @@ final class Plugin {
 
 	    	if ( (int) $current_user_id === (int) $user->ID ) {
 	    		continue;
-	    	} 
+	    	}
 
 			if ( isset( $logged_in_users[ $user->ID ] ) && ( $logged_in_users[ $user->ID ] > ( time() - ( 1 * 60 ) ) ) ) {
 				return $user->ID;
@@ -95,13 +98,36 @@ final class Plugin {
 	}
 
 	/**
+	 * Just in case...
+	 *
+	 * Actually in case if the previously logged-in user was inactive for some time and is re-active now. 
+	 *
+	 * @since  1.0.0
+	 * 	 
+	 * @return void.
+	 */
+	public function logout() {
+
+		if ( $this->is_any_administrator_online() ) {
+
+			// Get all sessions for user with ID $user_id
+			$sessions = \WP_Session_Tokens::get_instance( get_current_user_id() );
+
+			// We have got the sessions, destroy them all!
+			$sessions->destroy_all();
+		}
+	}
+
+	/**
 	 * Display error on login if any administator is logged in.
+	 *
+	 * @since  1.0.0 
 	 *
 	 * @param $user WP_User Object
 	 */
-	public function check_status( \WP_User $user ) {
+	public function check_availability( \WP_User $user ) {
 	 
-	    if ( $this->is_any_administrator_online() ) {
+	    if ( $this->is_any_administrator_online() && $user->ID !== $this->is_any_administrator_online() ) {
 
 	    	$user_info = \get_userdata( $this->is_any_administrator_online() );
 
@@ -135,6 +161,8 @@ final class Plugin {
 	 * Update online users status. Store in transient.
 	 *
 	 * This method is extracted from https://github.com/sanzeeb3/wp-force-logout/blob/master/includes/class-wp-force-logout-process.php
+	 *
+	 * @since  1.0.0
 	 *
 	 * @return void.
 	 */
