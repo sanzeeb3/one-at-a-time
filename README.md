@@ -1,7 +1,7 @@
 Welcome to the One At A Time repository on GitHub.
 
 ## Documentation
-* [Come Back! Documentation](http://sanjeebaryal.com.np/one-at-a-time/)
+* [One At A Time Documentation](http://sanjeebaryal.com.np/one-at-a-time/)
 
 ## Support
 This repository is not suitable for support. Please don't use our issue tracker for support requests. Support can take place through the [WordPress.org forum](https://wordpress.org/support/plugin/one-at-a-time/).

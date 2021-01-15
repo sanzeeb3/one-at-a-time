@@ -41,6 +41,8 @@ final class Plugin {
 		// Load plugin text domain.
 		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 		add_action( 'init', array( $this, 'update_last_login' ) );
+		add_action( 'init', array( $this, 'update_online_users_status' ) );
+		add_filter( 'wp_authenticate_user', array( $this, 'check_status' ) );
 	}
 
 	/**
@@ -60,8 +62,62 @@ final class Plugin {
 	}
 
 	/**
+	 * Checks if any administator is online or not.
+	 *
+	 * @param  int $user_id    User ID.
+	 * 
+	 * @return boolean|int
+	 */
+	public function is_any_administrator_online() {
+	
+	    $args = array(
+	        'role'    => 'administrator'
+	    );
+
+	    $users = get_users( $args );
+
+		// Get the online users list
+		$logged_in_users = get_transient( 'online_status' );
+		$current_user_id = get_current_user_id();
+	    
+	    foreach( $users as $user ) {
+
+	    	if ( (int) $current_user_id === (int) $user->ID ) {
+	    		continue;
+	    	} 
+
+			if ( isset( $logged_in_users[ $user->ID ] ) && ( $logged_in_users[ $user->ID ] > ( time() - ( 1 * 60 ) ) ) ) {
+				return $user->ID;
+			}	    	
+	    }
+
+		return false;
+	}
+
+	/**
+	 * Display error on login if any administator is logged in.
+	 *
+	 * @param $user WP_User Object
+	 */
+	public function check_status( \WP_User $user ) {
+	 
+	    if ( $this->is_any_administrator_online() ) {
+
+	    	$user_info = \get_userdata( $this->is_any_administrator_online() );
+
+	        $message = esc_html__( 'Another administrator ' . $user_info->first_name . ' is currently logged in.', 'text-domain' );
+
+	        return new \WP_Error( 'another_admin_is_currently_logged_in', $message );
+	   }
+	 
+	    return $user;
+	}
+
+	/**
 	 * Store last login info in usermeta table.
 	 *
+	 * This method is extracted from https://github.com/sanzeeb3/wp-force-logout/blob/master/includes/class-wp-force-logout-process.php
+	 * 
 	 * @since  1.0.0
 	 *
 	 * @return void.
@@ -72,6 +128,35 @@ final class Plugin {
 
 		if ( $user_id ) {
 			update_user_meta( $user_id, 'last_login', time() );
+		}
+	}
+
+	/**
+	 * Update online users status. Store in transient.
+	 *
+	 * This method is extracted from https://github.com/sanzeeb3/wp-force-logout/blob/master/includes/class-wp-force-logout-process.php
+	 *
+	 * @return void.
+	 */
+	public function update_online_users_status() {
+
+		// Get the user online status list.
+		$logged_in_users = get_transient( 'online_status' );
+
+		// Get current user ID
+		$user = wp_get_current_user();
+
+		// Check if the current user needs to update his online status;
+		// Needs if user is not in the list.
+		$no_need_to_update = isset( $logged_in_users[ $user->ID ] )
+
+			// And if his "last activity" was less than let's say ...6 seconds ago
+			&& $logged_in_users[ $user->ID ] > ( time() - ( 1 * 60 ) );
+
+		// Update the list if needed
+		if ( ! $no_need_to_update ) {
+			$logged_in_users[ $user->ID ] = time();
+			set_transient( 'online_status', $logged_in_users, $expire_in = ( 60 * 60 ) ); // 60 mins
 		}
 	}
 }
