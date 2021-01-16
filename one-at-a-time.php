@@ -15,7 +15,7 @@
  * @license    GPL-3.0+
  */
 
-defined( 'ABSPATH' ) || exit;	// Exit if accessed directly.
+defined( 'ABSPATH' ) || exit;   // Exit if accessed directly.
 
 define( 'ONE_AT_A_TIME', __FILE__ );
 

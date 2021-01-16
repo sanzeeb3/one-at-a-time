@@ -12,7 +12,7 @@ Only one administrator at a time can log into your site.
 
 == Description ==
 
-Only one administrator at a time can log into your site.
+**Only one administrator at a time can log into your site.**
 
 == Frequently Asked Questions ==
 
@@ -20,5 +20,5 @@ No questions yet.
 
 == Changelog ==
 
-= 1.0.0 - xx/xx/2021 =
+= 1.0.0 - 01/16/2021 =
 * Initial Release

@@ -59,40 +59,38 @@ final class Plugin {
 		$locale = apply_filters( 'plugin_locale', get_locale(), 'one-at-a-time' );
 
 		load_textdomain( 'one-at-a-time', WP_LANG_DIR . '/one-at-a-time/one-at-a-time-' . $locale . '.mo' );
-		load_plugin_textdomain( 'one-at-a-time', false, plugin_basename( dirname( COME_BACK ) ) . '/languages' );
+		load_plugin_textdomain( 'one-at-a-time', false, plugin_basename( dirname( ONE_AT_A_TIME ) ) . '/languages' );
 	}
 
 	/**
-	 * Checks if any administator is online or not.
-	 *
-	 * @param  int $user_id    User ID.
+	 * Checks if any administator (other than the currently logged in) is online or not.
 	 *
 	 * @since  1.0.0
-	 * 
-	 * @return boolean|int false or User ID.
+	 *
+	 * @return bool|int false or User ID.
 	 */
 	public function is_any_administrator_online() {
-	
-	    $args = array(
-	        'role'    => 'administrator'
-	    );
 
-	    $users = get_users( $args );
+		$args = array(
+			'role' => 'administrator',
+		);
+
+		$users = get_users( $args );
 
 		// Get the online users list
 		$logged_in_users = get_transient( 'online_status' );
 		$current_user_id = get_current_user_id();
-	    
-	    foreach( $users as $user ) {
 
-	    	if ( (int) $current_user_id === (int) $user->ID ) {
-	    		continue;
-	    	}
+		foreach ( $users as $user ) {
+
+			if ( (int) $current_user_id === (int) $user->ID ) {
+				continue;
+			}
 
 			if ( isset( $logged_in_users[ $user->ID ] ) && ( $logged_in_users[ $user->ID ] > ( time() - ( 1 * 60 ) ) ) ) {
 				return $user->ID;
-			}	    	
-	    }
+			}
+		}
 
 		return false;
 	}
@@ -100,10 +98,10 @@ final class Plugin {
 	/**
 	 * Just in case...
 	 *
-	 * Actually in case if the previously logged-in user was inactive for some time and is re-active now. 
+	 * Actually in case if the previously logged-in user was inactive for some time and is re-active now.
 	 *
 	 * @since  1.0.0
-	 * 	 
+	 *
 	 * @return void.
 	 */
 	public function logout() {
@@ -121,29 +119,32 @@ final class Plugin {
 	/**
 	 * Display error on login if any administator is logged in.
 	 *
-	 * @since  1.0.0 
+	 * @since  1.0.0
 	 *
 	 * @param $user WP_User Object
 	 */
 	public function check_availability( \WP_User $user ) {
-	 
-	    if ( $this->is_any_administrator_online() && $user->ID !== $this->is_any_administrator_online() ) {
 
-	    	$user_info = \get_userdata( $this->is_any_administrator_online() );
+		if ( $this->is_any_administrator_online() && $user->ID !== $this->is_any_administrator_online() ) {
 
-	        $message = esc_html__( 'Another administrator ' . $user_info->first_name . ' is currently logged in.', 'text-domain' );
+			$user_info = \get_userdata( $this->is_any_administrator_online() );
 
-	        return new \WP_Error( 'another_admin_is_currently_logged_in', $message );
-	   }
-	 
-	    return $user;
+			$message = sprintf( 
+							esc_html__( 'Another administrator %1s is currently logged in.', 'one-at-a-time' ),
+							$user_info->first_name
+						);
+
+			return new \WP_Error( 'another_admin_is_currently_logged_in', $message );
+		}
+
+		return $user;
 	}
 
 	/**
 	 * Store last login info in usermeta table.
 	 *
 	 * This method is extracted from https://github.com/sanzeeb3/wp-force-logout/blob/master/includes/class-wp-force-logout-process.php
-	 * 
+	 *
 	 * @since  1.0.0
 	 *
 	 * @return void.
