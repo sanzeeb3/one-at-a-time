@@ -106,6 +106,11 @@ final class Plugin {
 	 */
 	public function logout() {
 
+		// Don't do this for non-administrators.
+		if( ! current_user_can('administrator') ) {
+			return;
+		}
+
 		if ( $this->is_any_administrator_online() ) {
 
 			// Get all sessions for user with ID $user_id
@@ -124,6 +129,11 @@ final class Plugin {
 	 * @param $user WP_User Object
 	 */
 	public function check_availability( \WP_User $user ) {
+
+		// Don't do this for non-administrators.
+		if( ! in_array( 'administrator', $user->roles, true ) ) {
+			return $user;
+		}
 
 		if ( $this->is_any_administrator_online() && $user->ID !== $this->is_any_administrator_online() ) {
 

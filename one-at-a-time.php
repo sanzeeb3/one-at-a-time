@@ -2,7 +2,7 @@
 /**
  * Plugin Name: One At A Time
  * Description: Only one administrator at a time can log into your site.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Sanjeev Aryal
  * Author URI: http://www.sanjeebaryal.com.np
  * Text Domain: one-at-a-time
@@ -24,7 +24,7 @@ define( 'ONE_AT_A_TIME', __FILE__ );
  *
  * @var string
  */
-const ONE_AT_A_TIME_VERSION = '1.0.0';
+const ONE_AT_A_TIME_VERSION = '1.1.0';
 
 require_once __DIR__ . '/src/Plugin.php';
 
